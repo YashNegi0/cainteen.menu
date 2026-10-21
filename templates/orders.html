@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Orders</h2>
+<form class="row" method="get">
+  <select name="status" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for s in ['pending','preparing','completed','cancelled'] %}<option value="{{ s }}" {{ 'selected' if s==st }}>{{ s|capitalize }}</option>{% endfor %}
+  </select>
+</form>
+<div class="card">
+<table>
+<thead><tr><th>#</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Placed</th><th>Status</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td>{{ r.order_id }}</td>
+  <td>{{ r.student or 'Walk In' }}</td>
+  <td>{{ r.lines }}</td>
+  <td>Rs. {{ '%.2f'|format(r.total_amount) }}</td>
+  <td>{{ r.method|capitalize }} <span class="pill {{ r.pay_status }}">{{ r.pay_status }}</span></td>
+  <td>{{ r.created_at }}</td>
+  <td><form method="post" action="{{ url_for('order_status', i=r.order_id) }}"><select name="status" onchange="this.form.submit()">
+    {% for s in ['pending','preparing','completed','cancelled'] %}<option value="{{ s }}" {{ 'selected' if s==r.status }}>{{ s|capitalize }}</option>{% endfor %}
+  </select></form></td>
+</tr>
+{% else %}<tr><td colspan="7">No orders</td></tr>{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

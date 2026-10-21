@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CanteenCenter</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% set nav = [('dashboard','🏠','Dashboard'),('students','🎓','Students'),('categories','🗂️','Categories'),('items','🍔','Items'),('orders','🧾','Orders'),('reports','📊','Reports')] %}
+<aside>
+<h1>CanteenCenter</h1>
+{% for ep,ic,label in nav %}<a href="{{ url_for(ep) }}" class="{{ 'on' if request.endpoint==ep }}"><span>{{ ic }}</span>{{ label }}</a>{% endfor %}
+<a href="{{ url_for('pos') }}" class="pos {{ 'on' if request.endpoint=='pos' }}">🛒 POS</a>
+</aside>
+<main>
+<div class="top">Hello, admin!</div>
+{% for cat,msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+{% block body %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

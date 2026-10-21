@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Items</h2>
+<form method="post" class="row card">
+  <input name="name" placeholder="Food name" required>
+  <select name="category_id" required>{% for c in categories %}<option value="{{ c.category_id }}">{{ c.category_name }}</option>{% endfor %}</select>
+  <input name="price" type="number" step="0.01" min="0" placeholder="Price" required style="width:110px">
+  <input name="stock" type="number" min="0" placeholder="Stock" required style="width:100px">
+  <button>Add Item</button>
+</form>
+<div class="card">
+<table>
+<thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td>{{ r.food_id }}</td>
+  <td><input form="e{{ r.food_id }}" name="name" value="{{ r.food_name }}" required></td>
+  <td><select form="e{{ r.food_id }}" name="category_id">{% for c in categories %}<option value="{{ c.category_id }}" {{ 'selected' if c.category_id==r.category_id }}>{{ c.category_name }}</option>{% endfor %}</select></td>
+  <td><input form="e{{ r.food_id }}" name="price" type="number" step="0.01" min="0" value="{{ r.price }}" required></td>
+  <td><input form="e{{ r.food_id }}" name="stock" type="number" min="0" value="{{ r.stock }}" required></td>
+  <td><form id="e{{ r.food_id }}" method="post" action="{{ url_for('item_edit', i=r.food_id) }}"></form>
+  <button form="e{{ r.food_id }}">Save</button>
+  <form method="post" action="{{ url_for('item_delete', i=r.food_id) }}" onsubmit="return confirm('Delete item?')"><button class="danger">Delete</button></form></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

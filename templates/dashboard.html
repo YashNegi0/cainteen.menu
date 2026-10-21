@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% macro period(id) %}<select id="{{ id }}"><option value="today">Today</option><option value="week">Last 7 days</option><option value="month">Last 30 days</option><option value="all">All Time</option></select>{% endmacro %}
+{% block body %}
+<h2>Dashboard</h2>
+<div class="grid g3">
+  <div class="card"><h3><span><i class="dot">💰</i>Total Income</span>{{ period('pIncome') }}</h3><div style="position:relative;height:300px"><canvas id="income"></canvas></div></div>
+  <div class="card"><h3><span><i class="dot">🍴</i>Total Orders</span>{{ period('pOrders') }}</h3><div class="big" id="orders">0</div></div>
+  <div class="card"><h3><span><i class="dot">👥</i>Total Customers</span>{{ period('pCust') }}</h3><div class="big" id="cust">0</div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3><span><i class="dot">🍔</i>Top Menu Order</span>{{ period('pTop') }}</h3>
+    <table><thead><tr><th>Item Name</th><th>No. of Orders</th></tr></thead><tbody id="top"></tbody></table></div>
+  <div class="card"><h3><span><i class="dot">📈</i>Daily Sales</span></h3><div style="position:relative;height:280px"><canvas id="daily"></canvas></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const get=(u,p)=>fetch(u+(p?'?p='+p:'')).then(r=>r.json());
+const colors=['#b91c4a','#00a6a6','#2a5599','#e8c4bb','#4093ec','#8b1a6f'];
+let incomeChart,dailyChart;
+const centerText={id:'ct',afterDraw(c){const {ctx,chartArea:a}=c;ctx.save();ctx.font='24px Poppins';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#222';ctx.fillText('Rs. '+(c.options.total||0).toFixed(0),(a.left+a.right)/2,(a.top+a.bottom)/2);ctx.restore()}};
+async function income(){
+  const d=await get('/api/income',$('pIncome').value);
+  if(incomeChart)incomeChart.destroy();
+  incomeChart=new Chart($('income'),{type:'doughnut',data:{labels:d.labels,datasets:[{data:d.values,backgroundColor:colors}]},options:{maintainAspectRatio:false,cutout:'45%',total:d.total,plugins:{legend:{position:'bottom',labels:{boxWidth:30,boxHeight:10,font:{size:11}}}}},plugins:[centerText]});
+}
+async function orders(){$('orders').textContent=(await get('/api/orders',$('pOrders').value)).value}
+async function cust(){$('cust').textContent=(await get('/api/customers',$('pCust').value)).value}
+async function top(){
+  const d=await get('/api/top',$('pTop').value);
+  $('top').innerHTML=d.rows.length?d.rows.map(r=>`<tr><td>${r.n}</td><td>${r.c}</td></tr>`).join(''):'<tr><td colspan="2">No orders yet</td></tr>';
+}
+async function daily(){
+  const d=await get('/api/daily');
+  dailyChart=new Chart($('daily'),{type:'line',data:{labels:d.labels,datasets:[{label:'Total Amount',data:d.values,borderColor:'#0000ff',backgroundColor:'#0000ff',tension:.2}]},options:{maintainAspectRatio:false,scales:{y:{title:{display:true,text:'Amount'},beginAtZero:true}}}});
+}
+$('pIncome').value='all';
+$('pIncome').onchange=income;$('pOrders').onchange=orders;$('pCust').onchange=cust;$('pTop').onchange=top;
+income();orders();cust();top();daily();
+</script>
+{% endblock %}

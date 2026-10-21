@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Categories</h2>
+<form method="post" class="row card">
+  <input name="name" placeholder="Category name" required>
+  <button>Add Category</button>
+</form>
+<div class="card">
+<table>
+<thead><tr><th>ID</th><th>Name</th><th>Items</th><th></th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td>{{ r.category_id }}</td>
+  <td><input form="e{{ r.category_id }}" name="name" value="{{ r.category_name }}" required></td>
+  <td>{{ r.foods }}</td>
+  <td><form id="e{{ r.category_id }}" method="post" action="{{ url_for('category_edit', i=r.category_id) }}"></form>
+  <button form="e{{ r.category_id }}">Save</button>
+  <form method="post" action="{{ url_for('category_delete', i=r.category_id) }}" onsubmit="return confirm('Delete category?')"><button class="danger">Delete</button></form></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

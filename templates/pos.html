@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="pos-wrap">
+  <section>
+    <h2>Special Menu For You</h2>
+    <div class="cats" id="cats">
+      <button class="on" data-c="0">All</button>
+      {% for c in categories %}<button data-c="{{ c.category_id }}">{{ c.category_name }}</button>{% endfor %}
+    </div>
+    <div class="foods" id="foods"></div>
+  </section>
+  <div class="cart">
+    <h3>Current Order</h3>
+    <select id="student">
+      <option value="">Walk In Customer</option>
+      {% for s in students %}<option value="{{ s.student_id }}">{{ s.name }}</option>{% endfor %}
+    </select>
+    <div id="lines"></div>
+    <div class="sum"><span>Total</span><span id="total">Rs. 0.00</span></div>
+    <h4 style="margin:12px 0 0">Payment Method</h4>
+    <div class="pay">
+      <label><input type="radio" name="m" value="cash" checked> Cash</label>
+      <label><input type="radio" name="m" value="ewallet"> E-Wallet</label>
+      <label><input type="radio" name="m" value="credit"> Credit</label>
+    </div>
+    <div class="btns"><button class="clear" id="clear">Clear Cart</button><button class="place" id="place">Place Order</button></div>
+    <div id="msg" style="margin-top:10px;font-size:.85rem"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const foods={{ foods|tojson }};
+const icons={Breakfast:'🍳',Lunch:'🍜',Snacks:'🍔',Dinner:'🍽️',Drinks:'🥤'};
+const cart={};
+let cat=0;
+const $=id=>document.getElementById(id);
+const money=n=>'Rs. '+n.toFixed(2);
+function renderFoods(){
+  $('foods').innerHTML=foods.filter(f=>!cat||f.category_id==cat).map(f=>`
+    <div class="food ${cart[f.food_id]?'sel':''} ${f.stock<1?'out':''}" onclick="add(${f.food_id})">
+      <div class="pic">${icons[f.category_name]||'🍴'}</div><b>${f.food_name}</b><small>${money(f.price)} · ${f.stock} left</small></div>`).join('');
+}
+function renderCart(){
+  const ids=Object.keys(cart);
+  $('lines').innerHTML=ids.length?ids.map(id=>{const f=foods.find(x=>x.food_id==id);return `
+    <div class="line"><div class="nm"><b>${f.food_name}</b><br><small>${money(f.price)}</small></div>
+    <div class="q"><button onclick="chg(${id},-1)">−</button><span>${cart[id]}</span><button onclick="chg(${id},1)">+</button></div>
+    <b>${money(f.price*cart[id])}</b></div>`}).join(''):'<p style="color:#888">Cart is empty</p>';
+  $('total').textContent=money(ids.reduce((s,id)=>s+foods.find(x=>x.food_id==id).price*cart[id],0));
+  renderFoods();
+}
+function add(id){cart[id]=cart[id]||0;chg(id,1)}
+function chg(id,d){
+  const f=foods.find(x=>x.food_id==id);
+  const n=(cart[id]||0)+d;
+  if(n<1)delete cart[id];else if(n<=f.stock)cart[id]=n;
+  renderCart();
+}
+$('cats').onclick=e=>{
+  if(e.target.tagName!=='BUTTON')return;
+  cat=+e.target.dataset.c;
+  document.querySelectorAll('#cats button').forEach(b=>b.classList.toggle('on',b===e.target));
+  renderFoods();
+};
+$('clear').onclick=()=>{for(const k in cart)delete cart[k];$('msg').textContent='';renderCart()};
+$('place').onclick=async()=>{
+  const items=Object.entries(cart).map(([food_id,qty])=>({food_id:+food_id,qty}));
+  const r=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,student_id:$('student').value,method:document.querySelector('input[name=m]:checked').value})});
+  const d=await r.json();
+  if(!r.ok){$('msg').style.color='#d6336c';$('msg').textContent=d.error;return}
+  items.forEach(i=>{foods.find(f=>f.food_id==i.food_id).stock-=i.qty});
+  for(const k in cart)delete cart[k];
+  $('msg').style.color='#2f9e44';$('msg').textContent=`Order #${d.order_id} placed · ${money(d.total)}`;
+  renderCart();
+};
+renderCart();
+</script>
+{% endblock %}

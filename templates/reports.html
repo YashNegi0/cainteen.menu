@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Reports</h2>
+<form class="row card" method="get">
+  <label>From <input type="date" name="from" value="{{ a }}"></label>
+  <label>To <input type="date" name="to" value="{{ b }}"></label>
+  <button>Apply</button>
+  <a class="btn" style="background:#888" href="{{ url_for('reports') }}">Reset</a>
+</form>
+<div class="grid g3">
+  <div class="card"><h3>Orders</h3><div class="stat">{{ summary.n }}</div></div>
+  <div class="card"><h3>Revenue</h3><div class="stat">Rs. {{ '%.2f'|format(summary.t) }}</div></div>
+  <div class="card"><h3>Avg. Order</h3><div class="stat">Rs. {{ '%.2f'|format(summary.t/summary.n if summary.n else 0) }}</div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3>Sales by Category</h3>
+    <table><thead><tr><th>Category</th><th>Qty</th><th>Revenue</th></tr></thead><tbody>
+    {% for r in by_cat %}<tr><td>{{ r.n }}</td><td>{{ r.qty }}</td><td>Rs. {{ '%.2f'|format(r.t) }}</td></tr>{% else %}<tr><td colspan="3">No data</td></tr>{% endfor %}
+    </tbody></table></div>
+  <div class="card"><h3>Payments by Method</h3>
+    <table><thead><tr><th>Method</th><th>Orders</th><th>Amount</th></tr></thead><tbody>
+    {% for r in by_pay %}<tr><td>{{ r.n|capitalize }}</td><td>{{ r.qty }}</td><td>Rs. {{ '%.2f'|format(r.t) }}</td></tr>{% else %}<tr><td colspan="3">No data</td></tr>{% endfor %}
+    </tbody></table></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Low Stock (10 or fewer)</h3>
+  <table><thead><tr><th>Item</th><th>Category</th><th>Stock</th></tr></thead><tbody>
+  {% for r in low %}<tr><td>{{ r.food_name }}</td><td>{{ r.category_name }}</td><td>{{ r.stock }}</td></tr>{% else %}<tr><td colspan="3">All stocked</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}
