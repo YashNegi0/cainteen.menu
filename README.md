@@ -1,4 +1,3 @@
-# CanteenCenter
 # Canteen Menu System
 
 A web-based Canteen Menu System designed to make it easier for students to view available food items and for canteen staff to manage menus, orders, students, and reports.
